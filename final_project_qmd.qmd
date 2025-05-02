@@ -1,0 +1,119 @@
+---
+title: "Final Project: Pet Ownership Analysis"
+subtitle: "STAT 230 Spring 2025"
+author: "Carlos Reyes"
+format:
+  html:
+    embed-resources: true
+---
+
+# Group Members
+
+-   Mildred Izquierdo
+
+# Data
+
+We are analyzing **Pet Ownership in the United States Compared to Other Countries** using a compiled dataset based on public sources (e.g., World Animal Foundation, World Bank). The dataset includes ownership rates of dogs and cats, overall pet ownership, and GDP per capita for economic comparison.
+
+## Data Dictionary
+
+| Variable           | Type        | Description                  |
+|--------------------|-------------|------------------------------|
+| country            | Categorical | Name of the country          |
+| pet_ownership_rate | Numeric     | \% of households owning pets |
+| dog_ownership      | Numeric     | \% of households owning dogs |
+| cat_ownership      | Numeric     | \% of households owning cats |
+| gdp_per_capita     | Numeric     | GDP per capita in USD        |
+
+## Load Data
+
+```{r}
+library(tidyverse)
+
+# Load data
+data <- read.csv("pet_ownership_by_country.csv")
+
+# Preview
+head(data)
+```
+
+# Questions
+
+1.  **How does pet ownership in the U.S. compare to other developed nations?**\
+    The U.S. has a higher pet ownership rate compared to other developed nations. With 70% of U.S. households owning pets, it surpasses the average for developed countries (54.7%) and specific developed nations like Japan (39%) and Germany (46%). The lower variability in pet ownership rates among developed nations (SD = 11.6%) suggests the U.S. is an outlier on the higher end.
+
+2.  **What economic factors correlate with pet ownership rates?**\
+    The primary economic factor correlating with pet ownership rates is GDP per capita. The analysis shows a moderate positive correlation (r = 0.61, p = 0.06), suggesting that countries with higher GDP per capita, like the U.S., tend to have higher pet ownership rates. The linear regression supports this, indicating that an increase in GDP per capita predicts higher pet ownership, though the result is not statistically significant at the 95% confidence level (p = 0.06). This implies that economic prosperity may enable more households to afford pets, but other factors (e.g., cultural differences) might also play a role.
+
+# Descriptive Analysis
+
+## Summary Statistics
+
+```{r}
+# Summary statistics for pet ownership by region
+data %>%
+  mutate(region = ifelse(gdp_per_capita > 20000, "Developed", "Developing")) %>%
+  group_by(region) %>%
+  summarise(
+    mean_ownership = mean(pet_ownership_rate, na.rm = TRUE),
+    sd_ownership = sd(pet_ownership_rate, na.rm = TRUE),
+    min_ownership = min(pet_ownership_rate, na.rm = TRUE),
+    max_ownership = max(pet_ownership_rate, na.rm = TRUE)
+  )
+```
+
+## Histogram of Pet Ownership Rates
+
+```{r}
+ggplot(data, aes(x = pet_ownership_rate)) +
+  geom_histogram(binwidth = 5, fill = "lightgreen", color = "black") +
+  labs(title = "Distribution of Pet Ownership Rates", x = "Pet Ownership Rate (%)", y = "Number of Countries")
+```
+
+## Boxplot of Dog Ownership by Region
+
+```{r}
+# Add region classification
+data <- data %>%
+  mutate(region = ifelse(gdp_per_capita > 20000, "Developed", "Developing"))
+
+ggplot(data, aes(x = region, y = dog_ownership)) +
+  geom_boxplot(fill = "lightblue") +
+  labs(title = "Dog Ownership by Country Type", x = "Region Type", y = "Dog Ownership (%)")
+```
+
+## Scatterplot of Pet Ownership vs GDP per Capita
+
+```{r}
+ggplot(data, aes(x = gdp_per_capita, y = pet_ownership_rate)) +
+  geom_point() +
+  labs(title = "Pet Ownership vs GDP per Capita", x = "GDP per Capita (USD)", y = "Pet Ownership Rate (%)")
+```
+
+## Correlation and Linear Regression
+
+```{r}
+# Correlation
+cor.test(data$gdp_per_capita, data$pet_ownership_rate)
+
+# Linear model
+model <- lm(pet_ownership_rate ~ gdp_per_capita, data = data)
+summary(model)
+```
+
+## Regression Visualization
+
+```{r}
+ggplot(data, aes(x = gdp_per_capita, y = pet_ownership_rate)) +
+  geom_point() +
+  geom_smooth(method = "lm", color = "blue") +
+  labs(title = "Pet Ownership vs GDP per Capita", x = "GDP per Capita (USD)", y = "Pet Ownership Rate (%)")
+```
+
+# Conclusion
+
+Our analysis reveals significant variation in pet ownership rates across countries, with the United States leading at 70% of households owning pets, notably higher than other developed nations like Japan (39%) or Germany (46%). Descriptive statistics show developed countries have a higher mean pet ownership rate (54.7%) compared to developing countries (52.3%), with less variability in developed nations (SD = 11.6 vs. 15.4).
+
+While the dataset is limited to ten countries, it highlights a moderate positive correlation (Pearson's r = 0.61, p = 0.06) between GDP per capita and pet ownership rates, supported by a linear regression model indicating that higher GDP per capita predicts increased pet ownership (p = 0.06). Future analyses could incorporate larger datasets and cultural factors to further explore these trends.
+
+------------------------------------------------------------------------
